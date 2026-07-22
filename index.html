@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나루 도구함</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+:root{
+  --ink:#182033;
+  --muted:#68758d;
+  --line:#dce4f0;
+  --panel:rgba(255,255,255,.9);
+  --primary:#5d63e8;
+  --primary-dark:#454bd0;
+  --pink:#e867a1;
+  --danger:#e9525d;
+  --gray:#536077;
+  --shadow:0 24px 70px rgba(45,55,90,.13);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  color:var(--ink);
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+  background:
+    radial-gradient(circle at 8% 4%,rgba(183,213,255,.7),transparent 28%),
+    radial-gradient(circle at 92% 5%,rgba(255,207,228,.67),transparent 28%),
+    linear-gradient(145deg,#f8fbff 0%,#f4f3ff 50%,#fff8fc 100%);
+}
+
+button,
+input,
+select{
+  font:inherit;
+}
+
+button{
+  border:0;
+}
+
+button,
+.upload-area{
+  -webkit-tap-highlight-color:transparent;
+}
+
+.app{
+  width:min(1180px,calc(100% - 32px));
+  margin:0 auto;
+  padding:28px 0 72px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:26px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.brand-mark{
+  width:46px;
+  height:46px;
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  color:#fff;
+  font-size:22px;
+  font-weight:1000;
+  background:linear-gradient(135deg,var(--primary),var(--pink));
+  box-shadow:0 14px 30px rgba(93,99,232,.28);
+}
+
+.brand-name{
+  font-size:17px;
+  font-weight:1000;
+  letter-spacing:-.04em;
+}
+
+.brand-sub{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.home-btn{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  min-width:92px;
+  height:42px;
+  padding:0 16px;
+  border:1px solid rgba(129,140,167,.25);
+  border-radius:14px;
+  color:var(--ink);
+  background:rgba(255,255,255,.76);
+  box-shadow:0 8px 24px rgba(50,60,90,.08);
+  font-weight:900;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.home-btn:hover{
+  transform:translateY(-1px);
+  background:#fff;
+}
+
+.screen{
+  display:none;
+}
+
+.screen.active{
+  display:block;
+  animation:screenIn .25s ease both;
+}
+
+@keyframes screenIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.hero{
+  padding:56px 22px 34px;
+  text-align:center;
+}
+
+.hero-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:8px 13px;
+  border:1px solid rgba(129,140,167,.25);
+  border-radius:999px;
+  color:var(--muted);
+  background:rgba(255,255,255,.7);
+  box-shadow:0 8px 24px rgba(50,60,90,.07);
+  font-size:12px;
+  font-weight:800;
+}
+
+.hero h1{
+  margin:18px 0 10px;
+  font-size:clamp(35px,7vw,68px);
+  line-height:1.05;
+  letter-spacing:-.075em;
+}
+
+.hero p{
+  margin:0;
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.7;
+}
+
+.menu-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:22px;
+  max-width:920px;
+  margin:12px auto 0;
+}
+
+.menu-card{
+  position:relative;
+  min-height:265px;
+  padding:28px;
+  overflow:hidden;
+  text-align:left;
+  border:1px solid rgba(148,163,184,.28);
+  border-radius:30px;
+  color:var(--ink);
+  background:var(--panel);
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.menu-card::after{
+  content:"";
+  position:absolute;
+  width:170px;
+  height:170px;
+  right:-65px;
+  bottom:-65px;
+  border-radius:50%;
+  opacity:.28;
+  background:var(--glow);
+  filter:blur(2px);
+}
+
+.menu-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 28px 78px rgba(45,55,90,.17);
+}
+
+.menu-icon{
+  width:68px;
+  height:68px;
+  display:grid;
+  place-items:center;
+  margin-bottom:28px;
+  border-radius:22px;
+  color:#fff;
+  font-size:31px;
+  background:var(--icon);
+  box-shadow:0 15px 34px var(--icon-shadow);
+}
+
+.menu-label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+
+.menu-title{
+  margin-top:8px;
+  font-size:25px;
+  font-weight:1000;
+  letter-spacing:-.05em;
+}
+
+.menu-desc{
+  margin-top:10px;
+  max-width:390px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.65;
+}
+
+.menu-arrow{
+  position:absolute;
+  right:24px;
+  top:25px;
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  color:var(--ink);
+  background:rgba(255,255,255,.72);
+  font-size:20px;
+  font-weight:1000;
+}
+
+.page-head{
+  padding:22px 0 20px;
+  text-align:center;
+}
+
+.page-kicker{
+  color:var(--primary);
+  font-size:12px;
+  font-weight:1000;
+  letter-spacing:.12em;
+}
+
+.page-head h1{
+  margin:10px 0 8px;
+  font-size:clamp(30px,5vw,52px);
+  letter-spacing:-.065em;
+}
+
+.page-head p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.65;
+}
+
+.panel{
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.32);
+  border-radius:28px;
+  background:var(--panel);
+  box-shadow:var(--shadow);
+}
+
+.upload-area{
+  margin:22px;
+  padding:38px 20px;
+  border:2px dashed #c8cffb;
+  border-radius:24px;
+  text-align:center;
+  background:linear-gradient(135deg,#fff,#f7f8ff);
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.upload-area:hover,
+.upload-area.dragover{
+  border-color:#7b82ef;
+  background:#eef0ff;
+  transform:translateY(-2px);
+}
+
+.upload-icon{
+  width:72px;
+  height:72px;
+  display:grid;
+  place-items:center;
+  margin:0 auto 16px;
+  border-radius:22px;
+  color:#fff;
+  font-size:34px;
+  background:linear-gradient(135deg,var(--primary),var(--pink));
+  box-shadow:0 16px 40px rgba(93,99,232,.32);
+}
+
+.upload-title{
+  margin-bottom:8px;
+  font-size:20px;
+  font-weight:1000;
+}
+
+.upload-sub{
+  color:var(--muted);
+  font-size:14px;
+}
+
+input[type="file"]{
+  display:none;
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr auto auto;
+  gap:14px;
+  padding:0 22px 22px;
+  align-items:end;
+}
+
+.control{
+  padding:14px;
+  border:1px solid #e4e9f2;
+  border-radius:18px;
+  background:#f8fafc;
+}
+
+.control label{
+  display:block;
+  margin-bottom:8px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+}
+
+select,
+.action-btn{
+  width:100%;
+  height:44px;
+  border-radius:14px;
+}
+
+select{
+  padding:0 12px;
+  border:1px solid #dfe5ef;
+  color:var(--ink);
+  background:#fff;
+  outline:none;
+}
+
+.action-btn{
+  padding:0 16px;
+  color:#fff;
+  background:var(--ink);
+  font-weight:1000;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.action-btn:hover:not(:disabled){
+  transform:translateY(-1px);
+  box-shadow:0 10px 24px rgba(24,32,51,.18);
+}
+
+.action-btn:disabled{
+  opacity:.44;
+  cursor:not-allowed;
+}
+
+.btn-primary{background:var(--primary)}
+.btn-primary:hover:not(:disabled){background:var(--primary-dark)}
+.btn-danger{background:var(--danger)}
+.btn-gray{background:var(--gray)}
+
+.status{
+  padding:0 22px 22px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.progress{
+  display:none;
+  width:100%;
+  height:10px;
+  margin-top:10px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#e5e9f1;
+}
+
+.progress span{
+  display:block;
+  width:0;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,var(--primary),var(--pink));
+  transition:width .2s ease;
+}
+
+.group{
+  margin-top:24px;
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.34);
+  border-radius:26px;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 14px 38px rgba(45,55,90,.08);
+}
+
+.group-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:16px 18px;
+  border-bottom:1px solid rgba(148,163,184,.25);
+}
+
+.group-title{
+  font-weight:1000;
+  word-break:break-all;
+}
+
+.group-meta{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.group-actions{
+  display:flex;
+  gap:8px;
+  flex-shrink:0;
+}
+
+.group-actions .action-btn{
+  width:auto;
+  height:38px;
+  padding:0 14px;
+}
+
+.result{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:18px;
+  padding:18px;
+}
+
+.card{
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.34);
+  border-radius:22px;
+  background:rgba(255,255,255,.97);
+}
+
+.preview{
+  min-height:220px;
+  display:grid;
+  place-items:center;
+  padding:12px;
+  background:#f0f3f8;
+}
+
+.preview img{
+  width:100%;
+  height:auto;
+  max-height:360px;
+  object-fit:contain;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:0 8px 18px rgba(24,32,51,.12);
+}
+
+.card-body{
+  padding:14px;
+}
+
+.page-title{
+  margin-bottom:10px;
+  font-weight:1000;
+}
+
+.card-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.empty{
+  margin-top:24px;
+  padding:30px 18px;
+  border:1px dashed rgba(148,163,184,.52);
+  border-radius:24px;
+  color:var(--muted);
+  background:rgba(255,255,255,.62);
+  text-align:center;
+}
+
+.notice{
+  margin-top:20px;
+  padding:16px 18px;
+  border:1px solid rgba(148,163,184,.27);
+  border-radius:18px;
+  color:var(--muted);
+  background:rgba(255,255,255,.62);
+  font-size:13px;
+  line-height:1.7;
+}
+
+.calc-wrap{
+  max-width:900px;
+  margin:0 auto;
+}
+
+.calc-panel{
+  padding:22px;
+}
+
+.calc-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:6px;
+  border:1px solid #e2e7f0;
+  border-radius:18px;
+  background:#f4f6fa;
+}
+
+.calc-tab{
+  min-height:48px;
+  padding:10px 14px;
+  border-radius:13px;
+  color:var(--muted);
+  background:transparent;
+  font-weight:1000;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.calc-tab.active{
+  color:#fff;
+  background:linear-gradient(135deg,var(--primary),#777df0);
+  box-shadow:0 10px 24px rgba(93,99,232,.25);
+}
+
+.calc-content{
+  display:none;
+  padding-top:22px;
+}
+
+.calc-content.active{
+  display:block;
+}
+
+.calc-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.calc-field{
+  padding:17px;
+  border:1px solid #e2e7f0;
+  border-radius:20px;
+  background:#f8fafc;
+}
+
+.calc-field label{
+  display:block;
+  margin-bottom:9px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:900;
+}
+
+.input-box{
+  position:relative;
+}
+
+.input-box input{
+  width:100%;
+  height:54px;
+  padding:0 48px 0 15px;
+  border:1px solid #dbe2ed;
+  border-radius:15px;
+  color:var(--ink);
+  background:#fff;
+  font-size:19px;
+  font-weight:900;
+  outline:none;
+  transition:.18s ease;
+}
+
+.input-box input:focus{
+  border-color:#8c92f1;
+  box-shadow:0 0 0 4px rgba(93,99,232,.1);
+}
+
+.input-unit{
+  position:absolute;
+  right:15px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:14px;
+  font-weight:900;
+  pointer-events:none;
+}
+
+.calc-result{
+  margin-top:18px;
+  padding:24px;
+  border:1px solid rgba(93,99,232,.18);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at top right,rgba(232,103,161,.13),transparent 38%),
+    linear-gradient(135deg,#f5f6ff,#fff8fc);
+}
+
+.result-label{
+  color:var(--muted);
+  font-size:13px;
+  font-weight:900;
+}
+
+.result-value{
+  margin-top:7px;
+  font-size:clamp(30px,7vw,52px);
+  font-weight:1000;
+  line-height:1.15;
+  letter-spacing:-.06em;
+  word-break:break-all;
+}
+
+.result-desc{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.6;
+}
+
+.calc-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:14px;
+}
+
+.calc-actions .action-btn{
+  width:auto;
+  min-width:110px;
+}
+
+.error-text{
+  color:var(--danger);
+}
+
+
+.korean-calc-wrap{
+  max-width:940px;
+  margin:0 auto;
+}
+
+.korean-calc-panel{
+  padding:22px;
+}
+
+.korean-input-grid{
+  display:grid;
+  grid-template-columns:1.5fr 1fr;
+  gap:16px;
+}
+
+.korean-result-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:18px;
+}
+
+.korean-result-card{
+  position:relative;
+  overflow:hidden;
+  padding:22px;
+  border:1px solid rgba(93,99,232,.18);
+  border-radius:24px;
+  background:
+    radial-gradient(circle at top right,rgba(93,99,232,.13),transparent 38%),
+    linear-gradient(145deg,#f5f7ff,#fff);
+}
+
+.korean-result-card.percent-card{
+  border-color:rgba(53,169,160,.22);
+  background:
+    radial-gradient(circle at top right,rgba(53,169,160,.15),transparent 38%),
+    linear-gradient(145deg,#f3fffd,#fff);
+}
+
+.korean-number-result{
+  margin-top:9px;
+  font-size:clamp(28px,5vw,42px);
+  font-weight:1000;
+  line-height:1.16;
+  letter-spacing:-.055em;
+  word-break:break-all;
+}
+
+.korean-text-result{
+  min-height:58px;
+  margin-top:13px;
+  padding:13px 14px;
+  border:1px solid rgba(148,163,184,.25);
+  border-radius:15px;
+  color:#c03252;
+  background:rgba(255,255,255,.76);
+  font-size:16px;
+  font-weight:1000;
+  line-height:1.65;
+  word-break:keep-all;
+}
+
+.korean-text-result.placeholder{
+  color:#98a2b3;
+}
+
+.korean-copy-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:13px;
+}
+
+.korean-bottom-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:16px;
+}
+
+.document-copy-card{
+  margin-top:18px;
+  padding:20px;
+  border:1px solid rgba(53,169,160,.24);
+  border-radius:22px;
+  background:
+    radial-gradient(circle at top right,rgba(53,169,160,.12),transparent 38%),
+    linear-gradient(145deg,#f4fffd,#fff);
+}
+
+.document-copy-title{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  letter-spacing:.05em;
+}
+
+.document-copy-box{
+  min-height:108px;
+  margin-top:10px;
+  padding:16px;
+  border:1px solid rgba(148,163,184,.28);
+  border-radius:16px;
+  color:var(--ink);
+  background:rgba(255,255,255,.86);
+  font-size:17px;
+  font-weight:900;
+  line-height:1.8;
+  white-space:pre-wrap;
+  word-break:keep-all;
+}
+
+.document-copy-box.placeholder{
+  color:#98a2b3;
+  font-weight:800;
+}
+
+.document-copy-card .action-btn{
+  margin-top:12px;
+}
+
+.korean-bottom-actions .action-btn{
+  width:auto;
+  min-width:120px;
+}
+
+@media(max-width:900px){
+  .menu-grid{
+    grid-template-columns:1fr;
+    max-width:650px;
+  }
+}
+
+@media(max-width:720px){
+  .korean-input-grid,
+  .korean-result-grid{
+    grid-template-columns:1fr;
+  }
+
+  .korean-bottom-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  .korean-bottom-actions .action-btn{
+    width:100%;
+  }
+}
+
+@media(max-width:860px){
+  .controls{
+    grid-template-columns:1fr;
+  }
+
+  .group-head{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .group-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+
+  .group-actions .action-btn{
+    width:100%;
+  }
+}
+
+@media(max-width:700px){
+  .menu-grid{
+    grid-template-columns:1fr;
+  }
+
+  .hero{
+    padding-top:36px;
+  }
+
+  .calc-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:560px){
+  .app{
+    width:min(100% - 22px,1180px);
+    padding-top:16px;
+  }
+
+  .brand-sub{
+    display:none;
+  }
+
+  .home-btn{
+    min-width:76px;
+    padding:0 12px;
+  }
+
+  .upload-area{
+    margin:15px;
+    padding:30px 14px;
+  }
+
+  .controls{
+    padding:0 15px 15px;
+  }
+
+  .status{
+    padding:0 15px 15px;
+  }
+
+  .result{
+    grid-template-columns:1fr;
+  }
+
+  .calc-panel{
+    padding:15px;
+  }
+
+  .calc-tabs{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div>
+        <div class="brand-name">나루 도구함</div>
+        <div class="brand-sub">파일 변환과 간단한 계산을 한곳에서</div>
+      </div>
+    </div>
+    <button type="button" class="home-btn" id="homeBtn">← 메인</button>
+  </div>
+
+  <main>
+    <section class="screen active" id="homeScreen">
+      <div class="hero">
+        <div class="hero-badge">NARU SIMPLE TOOLS</div>
+        <h1>필요한 기능을<br>선택해 주세요.</h1>
+        <p>파일은 서버로 전송하지 않고 브라우저 안에서 처리됩니다.</p>
+      </div>
+
+      <div class="menu-grid">
+        <button type="button" class="menu-card" data-open="pdfScreen"
+          style="--icon:linear-gradient(135deg,#5d63e8,#7c82f2);--icon-shadow:rgba(93,99,232,.28);--glow:#aeb2ff;">
+          <span class="menu-arrow">→</span>
+          <span class="menu-icon">📄</span>
+          <span class="menu-label">FILE CONVERTER</span>
+          <span class="menu-title">PDF → PNG</span>
+          <span class="menu-desc">여러 PDF를 한꺼번에 올리고 페이지별 저장, PDF별 ZIP, 전체 ZIP 저장을 이용할 수 있습니다.</span>
+        </button>
+
+        <button type="button" class="menu-card" data-open="calcScreen"
+          style="--icon:linear-gradient(135deg,#e867a1,#f28abc);--icon-shadow:rgba(232,103,161,.28);--glow:#ffc4dd;">
+          <span class="menu-arrow">→</span>
+          <span class="menu-icon">%</span>
+          <span class="menu-label">QUICK CALCULATOR</span>
+          <span class="menu-title">퍼센트 계산기</span>
+          <span class="menu-desc">금액의 몇 퍼센트가 얼마인지, 두 금액의 비율이 몇 퍼센트인지 바로 계산합니다.</span>
+        </button>
+
+        <button type="button" class="menu-card" data-open="koreanAmountScreen"
+          style="--icon:linear-gradient(135deg,#35a9a0,#65c6bc);--icon-shadow:rgba(53,169,160,.27);--glow:#b7eee8;">
+          <span class="menu-arrow">→</span>
+          <span class="menu-icon">₩</span>
+          <span class="menu-label">KOREAN AMOUNT</span>
+          <span class="menu-title">한글 금액 계산기</span>
+          <span class="menu-desc">입력 금액과 원하는 퍼센트 금액을 숫자·한글 표기로 함께 확인하고 복사합니다.</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="screen" id="pdfScreen">
+      <div class="page-head">
+        <div class="page-kicker">PDF PAGE EXPORTER</div>
+        <h1>PDF → PNG 변환기</h1>
+        <p>PDF 여러 개를 추가해도 기존 변환 결과는 유지됩니다.</p>
+      </div>
+
+      <section class="panel">
+        <div class="upload-area" id="dropArea">
+          <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple>
+          <div class="upload-icon">📄</div>
+          <div class="upload-title">PDF 파일 여러 개 선택 또는 드래그</div>
+          <div class="upload-sub">파일을 누르거나 이 영역으로 끌어오세요.</div>
+        </div>
+
+        <div class="controls">
+          <div class="control">
+            <label for="scaleSelect">저장 해상도</label>
+            <select id="scaleSelect">
+              <option value="1">1배율 / 빠름</option>
+              <option value="2" selected>2배율 / 기본 추천</option>
+              <option value="3">3배율 / 고화질</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="bgSelect">배경 처리</label>
+            <select id="bgSelect">
+              <option value="white" selected>흰색 배경으로 저장</option>
+              <option value="transparent">투명 배경 유지</option>
+            </select>
+          </div>
+
+          <button type="button" id="zipBtn" class="action-btn btn-primary" disabled>남은 PNG 전체 ZIP</button>
+          <button type="button" id="clearAllBtn" class="action-btn btn-danger" disabled>전체 PNG 삭제</button>
+        </div>
+
+        <div class="status">
+          <div id="statusText">아직 변환된 PDF가 없습니다.</div>
+          <div class="progress" id="progress"><span id="progressBar"></span></div>
+        </div>
+      </section>
+
+      <div id="groups"></div>
+
+      <div class="empty" id="emptyBox">
+        변환된 PNG가 여기에 표시됩니다.
+      </div>
+
+      <div class="notice">
+        ※ PDF를 추가로 올려도 기존 PNG는 유지됩니다.<br>
+        ※ 삭제한 PNG는 ZIP 저장 목록에서도 제외됩니다.<br>
+        ※ 모든 변환은 브라우저 안에서 진행됩니다.
+      </div>
+    </section>
+
+    <section class="screen" id="calcScreen">
+      <div class="page-head">
+        <div class="page-kicker">PERCENT CALCULATOR</div>
+        <h1>퍼센트 계산기</h1>
+        <p>입력하는 즉시 계산 결과가 표시됩니다.</p>
+      </div>
+
+      <div class="calc-wrap">
+        <section class="panel calc-panel">
+          <div class="calc-tabs">
+            <button type="button" class="calc-tab active" data-calc-tab="amountPercent">금액의 몇 %인지 계산</button>
+            <button type="button" class="calc-tab" data-calc-tab="ratioPercent">두 금액의 비율 계산</button>
+          </div>
+
+          <div class="calc-content active" id="amountPercent">
+            <div class="calc-grid">
+              <div class="calc-field">
+                <label for="baseAmount">금액</label>
+                <div class="input-box">
+                  <input type="text" id="baseAmount" inputmode="decimal" autocomplete="off" placeholder="예: 100,000">
+                  <span class="input-unit">원</span>
+                </div>
+              </div>
+
+              <div class="calc-field">
+                <label for="percentAmount">퍼센트</label>
+                <div class="input-box">
+                  <input type="text" id="percentAmount" inputmode="decimal" autocomplete="off" placeholder="예: 15">
+                  <span class="input-unit">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-result">
+              <div class="result-label">계산 결과</div>
+              <div class="result-value" id="amountResult">0원</div>
+              <div class="result-desc" id="amountDesc">금액과 퍼센트를 입력해 주세요.</div>
+            </div>
+
+            <div class="calc-actions" style="gap:10px;">
+              <button type="button" class="action-btn btn-primary" id="copyAmount">결과 복사</button>
+              <button type="button" class="action-btn btn-gray" id="resetAmount">입력 초기화</button>
+            </div>
+          </div>
+
+          <div class="calc-content" id="ratioPercent">
+            <div class="calc-grid">
+              <div class="calc-field">
+                <label for="totalAmount">기준 금액</label>
+                <div class="input-box">
+                  <input type="text" id="totalAmount" inputmode="decimal" autocomplete="off" placeholder="예: 100,000">
+                  <span class="input-unit">원</span>
+                </div>
+              </div>
+
+              <div class="calc-field">
+                <label for="partAmount">비교 금액</label>
+                <div class="input-box">
+                  <input type="text" id="partAmount" inputmode="decimal" autocomplete="off" placeholder="예: 25,000">
+                  <span class="input-unit">원</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="calc-result">
+              <div class="result-label">계산 결과</div>
+              <div class="result-value" id="ratioResult">0%</div>
+              <div class="result-desc" id="ratioDesc">기준 금액과 비교 금액을 입력해 주세요.</div>
+            </div>
+
+            <div class="calc-actions" style="gap:10px;">
+              <button type="button" class="action-btn btn-primary" id="copyRatio">결과 복사</button>
+              <button type="button" class="action-btn btn-gray" id="resetRatio">입력 초기화</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="screen" id="koreanAmountScreen">
+      <div class="page-head">
+        <div class="page-kicker">KOREAN AMOUNT CALCULATOR</div>
+        <h1>한글 금액 계산기</h1>
+        <p>입력 금액과 퍼센트 금액을 숫자·한글 표기로 함께 확인할 수 있습니다.</p>
+      </div>
+
+      <div class="korean-calc-wrap">
+        <section class="panel korean-calc-panel">
+          <div class="korean-input-grid">
+            <div class="calc-field">
+              <label for="koreanAmountInput">기준 금액</label>
+              <div class="input-box">
+                <input type="text" id="koreanAmountInput" inputmode="numeric" autocomplete="off" placeholder="예: 5,000,000">
+                <span class="input-unit">원</span>
+              </div>
+            </div>
+
+            <div class="calc-field">
+              <label for="koreanPercentInput">계산할 퍼센트</label>
+              <div class="input-box">
+                <input type="text" id="koreanPercentInput" inputmode="decimal" autocomplete="off" value="50">
+                <span class="input-unit">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="korean-result-grid">
+            <article class="korean-result-card">
+              <div class="result-label">입력한 기준 금액</div>
+              <div class="korean-number-result" id="koreanBaseNumber">0원</div>
+              <div class="korean-text-result placeholder" id="koreanBaseText">금액을 입력해 주세요.</div>
+              <div class="korean-copy-actions">
+                <button type="button" class="action-btn btn-gray" id="copyKoreanBaseNumber">숫자 복사</button>
+                <button type="button" class="action-btn btn-primary" id="copyKoreanBaseText">한글 복사</button>
+              </div>
+            </article>
+
+            <article class="korean-result-card percent-card">
+              <div class="result-label" id="koreanPercentLabel">50% 계산 금액</div>
+              <div class="korean-number-result" id="koreanPercentNumber">0원</div>
+              <div class="korean-text-result placeholder" id="koreanPercentText">금액을 입력해 주세요.</div>
+              <div class="korean-copy-actions">
+                <button type="button" class="action-btn btn-gray" id="copyKoreanPercentNumber">숫자 복사</button>
+                <button type="button" class="action-btn btn-primary" id="copyKoreanPercentText">한글 복사</button>
+              </div>
+            </article>
+          </div>
+
+          <div class="document-copy-card">
+            <div class="document-copy-title">퍼센트 금액 문서용 문구</div>
+            <div class="document-copy-box placeholder" id="koreanDocumentText">금액과 퍼센트를 입력해 주세요.</div>
+            <button type="button" class="action-btn btn-primary" id="copyKoreanDocument">문서용 문구 복사</button>
+          </div>
+
+          <div class="korean-bottom-actions">
+            <button type="button" class="action-btn btn-primary" id="copyKoreanAll">전체 결과 복사</button>
+            <button type="button" class="action-btn btn-gray" id="resetKoreanAmount">입력 초기화</button>
+          </div>
+        </section>
+
+        <div class="notice">
+          ※ 퍼센트 계산 결과는 원 단위로 반올림합니다.<br>
+          ※ 한글 금액은 문서에 붙여 넣기 쉬운 ‘금 오백만원정’ 형식으로 표시됩니다.
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* 화면 전환 */
+const screens = [...document.querySelectorAll(".screen")];
+const homeBtn = document.getElementById("homeBtn");
+
+function showScreen(screenId){
+  screens.forEach(screen => {
+    screen.classList.toggle("active", screen.id === screenId);
+  });
+
+  homeBtn.style.display = screenId === "homeScreen" ? "none" : "inline-flex";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+document.querySelectorAll("[data-open]").forEach(button => {
+  button.addEventListener("click", () => showScreen(button.dataset.open));
+});
+
+homeBtn.addEventListener("click", () => showScreen("homeScreen"));
+
+/* PDF → PNG */
+const pdfInput = document.getElementById("pdfInput");
+const dropArea = document.getElementById("dropArea");
+const groups = document.getElementById("groups");
+const emptyBox = document.getElementById("emptyBox");
+const statusText = document.getElementById("statusText");
+const progress = document.getElementById("progress");
+const progressBar = document.getElementById("progressBar");
+const scaleSelect = document.getElementById("scaleSelect");
+const bgSelect = document.getElementById("bgSelect");
+const zipBtn = document.getElementById("zipBtn");
+const clearAllBtn = document.getElementById("clearAllBtn");
+
+let allPages = [];
+let groupCount = 0;
+let isConverting = false;
+
+dropArea.addEventListener("click", () => {
+  if (!isConverting) pdfInput.click();
+});
+
+dropArea.addEventListener("dragover", event => {
+  event.preventDefault();
+  if (!isConverting) dropArea.classList.add("dragover");
+});
+
+dropArea.addEventListener("dragleave", () => {
+  dropArea.classList.remove("dragover");
+});
+
+dropArea.addEventListener("drop", event => {
+  event.preventDefault();
+  dropArea.classList.remove("dragover");
+
+  if (isConverting) return;
+
+  const files = [...event.dataTransfer.files].filter(isPDFFile);
+  if (!files.length) {
+    alert("PDF 파일만 업로드할 수 있습니다.");
+    return;
+  }
+
+  handleFiles(files);
+});
+
+pdfInput.addEventListener("change", event => {
+  const files = [...event.target.files].filter(isPDFFile);
+  if (files.length) handleFiles(files);
+  pdfInput.value = "";
+});
+
+function isPDFFile(file){
+  return file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+}
+
+async function handleFiles(files){
+  if (isConverting || !files.length) return;
+
+  isConverting = true;
+  pdfInput.disabled = true;
+  progress.style.display = "block";
+  progressBar.style.width = "0%";
+
+  let completedFiles = 0;
+  let failedFiles = 0;
+
+  for (let index = 0; index < files.length; index++){
+    const file = files[index];
+    statusText.textContent = `${index + 1} / ${files.length}번째 PDF 변환 중: ${file.name}`;
+
+    try{
+      await convertPDF(file, index, files.length);
+      completedFiles++;
+    }catch(error){
+      failedFiles++;
+      console.error(error);
+      createFailedGroup(file.name, error);
+    }
+  }
+
+  progressBar.style.width = "100%";
+  isConverting = false;
+  pdfInput.disabled = false;
+
+  if (failedFiles){
+    statusText.innerHTML = `<span class="error-text">${completedFiles}개 변환 완료, ${failedFiles}개 변환 실패</span> · 현재 PNG ${allPages.length}개`;
+  }else{
+    statusText.textContent = `변환 완료! 현재 남아있는 PNG: ${allPages.length}개`;
+  }
+
+  updateButtons();
+}
+
+async function convertPDF(file, fileIndex, totalFiles){
+  groupCount++;
+
+  const groupId = `group_${Date.now()}_${groupCount}`;
+  const cleanName = file.name.replace(/\.pdf$/i,"");
+  const scale = Number(scaleSelect.value);
+  const bgMode = bgSelect.value;
+
+  const groupEl = document.createElement("section");
+  groupEl.className = "group";
+  groupEl.dataset.groupId = groupId;
+
+  groupEl.innerHTML = `
+    <div class="group-head">
+      <div>
+        <div class="group-title">${escapeHTML(file.name)}</div>
+        <div class="group-meta">변환 준비 중</div>
+      </div>
+      <div class="group-actions">
+        <button type="button" class="action-btn btn-gray groupZipBtn" disabled>이 PDF ZIP</button>
+        <button type="button" class="action-btn btn-danger groupDeleteBtn">이 PDF 삭제</button>
+      </div>
+    </div>
+    <div class="result"></div>
+  `;
+
+  groups.prepend(groupEl);
+  emptyBox.style.display = "none";
+
+  const meta = groupEl.querySelector(".group-meta");
+  const result = groupEl.querySelector(".result");
+  const groupZipBtn = groupEl.querySelector(".groupZipBtn");
+  const groupDeleteBtn = groupEl.querySelector(".groupDeleteBtn");
+
+  groupDeleteBtn.addEventListener("click", () => deleteGroup(groupId));
+  groupZipBtn.addEventListener("click", () => downloadGroupZip(groupId, cleanName, groupZipBtn));
+
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({data:arrayBuffer});
+    const pdf = await loadingTask.promise;
+
+    meta.textContent = `총 ${pdf.numPages}페이지 변환 중`;
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++){
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({scale});
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d",{alpha:bgMode === "transparent"});
+
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+
+      if (bgMode === "white"){
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+      }
+
+      await page.render({
+        canvasContext:ctx,
+        viewport
+      }).promise;
+
+      const dataUrl = canvas.toDataURL("image/png");
+      const pageId = `page_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+      const item = {
+        id:pageId,
+        groupId,
+        pdfName:cleanName,
+        pageNumber,
+        dataUrl,
+        fileName:`${cleanName}_page_${String(pageNumber).padStart(2,"0")}.png`
+      };
+
+      allPages.push(item);
+      createPageCard(result,item);
+
+      const pageRatio = pageNumber / pdf.numPages;
+      const totalRatio = (fileIndex + pageRatio) / totalFiles;
+      progressBar.style.width = `${Math.round(totalRatio * 100)}%`;
+      statusText.textContent = `${file.name} · ${pageNumber} / ${pdf.numPages}페이지 변환 완료`;
+      meta.textContent = `${pageNumber} / ${pdf.numPages}페이지 변환 완료`;
+
+      page.cleanup();
+      canvas.width = 1;
+      canvas.height = 1;
+    }
+
+    meta.textContent = `PNG ${pdf.numPages}개 생성됨`;
+    groupZipBtn.disabled = false;
+    await pdf.destroy();
+  }catch(error){
+    groupEl.remove();
+    allPages = allPages.filter(item => item.groupId !== groupId);
+    throw error;
+  }
+}
+
+function createFailedGroup(fileName,error){
+  const groupEl = document.createElement("section");
+  groupEl.className = "group";
+  groupEl.innerHTML = `
+    <div class="group-head">
+      <div>
+        <div class="group-title">${escapeHTML(fileName)}</div>
+        <div class="group-meta error-text">PDF를 읽지 못했습니다. 암호가 걸렸거나 파일이 손상되었을 수 있습니다.</div>
+      </div>
+      <div class="group-actions">
+        <button type="button" class="action-btn btn-danger failedDeleteBtn">목록 삭제</button>
+      </div>
+    </div>
+  `;
+  groupEl.querySelector(".failedDeleteBtn").addEventListener("click",() => {
+    groupEl.remove();
+    updateButtons();
+  });
+  groups.prepend(groupEl);
+  emptyBox.style.display = "none";
+}
+
+function createPageCard(container,item){
+  const card = document.createElement("div");
+  card.className = "card";
+  card.dataset.pageId = item.id;
+
+  card.innerHTML = `
+    <div class="preview">
+      <img src="${item.dataUrl}" alt="${item.pageNumber}페이지 미리보기">
+    </div>
+    <div class="card-body">
+      <div class="page-title">${item.pageNumber}페이지</div>
+      <div class="card-actions">
+        <button type="button" class="action-btn btn-gray downloadBtn">저장</button>
+        <button type="button" class="action-btn btn-danger deleteBtn">삭제</button>
+      </div>
+    </div>
+  `;
+
+  card.querySelector(".downloadBtn").addEventListener("click",() => {
+    downloadDataUrl(item.dataUrl,item.fileName);
+  });
+
+  card.querySelector(".deleteBtn").addEventListener("click",() => {
+    deletePage(item.id);
+  });
+
+  container.appendChild(card);
+}
+
+function deletePage(pageId){
+  const page = allPages.find(item => item.id === pageId);
+  if (!page) return;
+
+  allPages = allPages.filter(item => item.id !== pageId);
+
+  const card = document.querySelector(`[data-page-id="${CSS.escape(pageId)}"]`);
+  if (card) card.remove();
+
+  const groupEl = document.querySelector(`[data-group-id="${CSS.escape(page.groupId)}"]`);
+  if (groupEl){
+    const remaining = allPages.filter(item => item.groupId === page.groupId);
+    const meta = groupEl.querySelector(".group-meta");
+    const groupZipBtn = groupEl.querySelector(".groupZipBtn");
+
+    if (!remaining.length){
+      groupEl.remove();
+    }else{
+      meta.textContent = `남아있는 PNG ${remaining.length}개`;
+      groupZipBtn.disabled = false;
+    }
+  }
+
+  updateButtons();
+}
+
+function deleteGroup(groupId){
+  allPages = allPages.filter(item => item.groupId !== groupId);
+
+  const groupEl = document.querySelector(`[data-group-id="${CSS.escape(groupId)}"]`);
+  if (groupEl) groupEl.remove();
+
+  updateButtons();
+}
+
+clearAllBtn.addEventListener("click",() => {
+  if (!allPages.length && !groups.children.length) return;
+
+  allPages = [];
+  groups.innerHTML = "";
+  progress.style.display = "none";
+  progressBar.style.width = "0%";
+  statusText.textContent = "모든 변환 결과를 삭제했습니다.";
+  updateButtons();
+});
+
+zipBtn.addEventListener("click",async() => {
+  if (!allPages.length) return;
+
+  const originalText = zipBtn.textContent;
+  zipBtn.disabled = true;
+  zipBtn.textContent = "ZIP 생성 중...";
+
+  try{
+    const zip = new JSZip();
+
+    for (const page of allPages){
+      const base64 = page.dataUrl.split(",")[1];
+      zip.file(`${sanitizeFolderName(page.pdfName)}/${page.fileName}`,base64,{base64:true});
+    }
+
+    const blob = await zip.generateAsync({type:"blob"});
+    downloadBlob(blob,"pdf_png_pages.zip");
+  }catch(error){
+    console.error(error);
+    alert("ZIP 파일 생성 중 오류가 발생했습니다.");
+  }finally{
+    zipBtn.textContent = originalText;
+    updateButtons();
+  }
+});
+
+async function downloadGroupZip(groupId,pdfName,button){
+  const pages = allPages.filter(item => item.groupId === groupId);
+  if (!pages.length) return;
+
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = "ZIP 생성 중...";
+
+  try{
+    const zip = new JSZip();
+
+    for (const page of pages){
+      const base64 = page.dataUrl.split(",")[1];
+      zip.file(page.fileName,base64,{base64:true});
+    }
+
+    const blob = await zip.generateAsync({type:"blob"});
+    downloadBlob(blob,`${pdfName}_png_pages.zip`);
+  }catch(error){
+    console.error(error);
+    alert("ZIP 파일 생성 중 오류가 발생했습니다.");
+  }finally{
+    button.textContent = originalText;
+    button.disabled = !allPages.some(item => item.groupId === groupId);
+  }
+}
+
+function updateButtons(){
+  const hasPages = allPages.length > 0;
+  zipBtn.disabled = !hasPages || isConverting;
+  clearAllBtn.disabled = (!hasPages && !groups.children.length) || isConverting;
+  emptyBox.style.display = groups.children.length ? "none" : "block";
+
+  if (!hasPages && !groups.children.length && !isConverting){
+    statusText.textContent = "남아있는 PNG가 없습니다.";
+  }
+}
+
+function downloadDataUrl(dataUrl,filename){
+  const anchor = document.createElement("a");
+  anchor.href = dataUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
+function downloadBlob(blob,filename){
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url),1000);
+}
+
+function sanitizeFolderName(name){
+  return name.replace(/[\\/:*?"<>|]/g,"_").trim() || "PDF";
+}
+
+function escapeHTML(str){
+  return String(str).replace(/[&<>"']/g,match => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[match]));
+}
+
+/* 퍼센트 계산기 */
+const calcTabs = [...document.querySelectorAll(".calc-tab")];
+const calcContents = [...document.querySelectorAll(".calc-content")];
+
+calcTabs.forEach(tab => {
+  tab.addEventListener("click",() => {
+    calcTabs.forEach(item => item.classList.toggle("active",item === tab));
+    calcContents.forEach(content => {
+      content.classList.toggle("active",content.id === tab.dataset.calcTab);
+    });
+  });
+});
+
+const baseAmount = document.getElementById("baseAmount");
+const percentAmount = document.getElementById("percentAmount");
+const totalAmount = document.getElementById("totalAmount");
+const partAmount = document.getElementById("partAmount");
+
+const amountResult = document.getElementById("amountResult");
+const amountDesc = document.getElementById("amountDesc");
+const ratioResult = document.getElementById("ratioResult");
+const ratioDesc = document.getElementById("ratioDesc");
+
+[baseAmount,percentAmount,totalAmount,partAmount].forEach(input => {
+  input.addEventListener("input",() => {
+    const cursorAtEnd = input.selectionStart === input.value.length;
+    input.value = formatEditableNumber(input.value);
+    if (cursorAtEnd){
+      requestAnimationFrame(() => input.setSelectionRange(input.value.length,input.value.length));
+    }
+
+    calculateAmountPercent();
+    calculateRatioPercent();
+  });
+
+  input.addEventListener("blur",() => {
+    const value = parseNumber(input.value);
+    input.value = Number.isFinite(value) && input.value !== "" ? formatInputFinal(value) : "";
+  });
+});
+
+function calculateAmountPercent(){
+  const amount = parseNumber(baseAmount.value);
+  const percent = parseNumber(percentAmount.value);
+
+  if (!Number.isFinite(amount) || !Number.isFinite(percent)){
+    amountResult.textContent = "0원";
+    amountDesc.textContent = "금액과 퍼센트를 입력해 주세요.";
+    return;
+  }
+
+  const result = amount * percent / 100;
+  amountResult.textContent = `${formatResultNumber(result)}원`;
+  amountDesc.textContent = `${formatResultNumber(amount)}원의 ${formatPercentNumber(percent)}%는 ${formatResultNumber(result)}원입니다.`;
+}
+
+function calculateRatioPercent(){
+  const total = parseNumber(totalAmount.value);
+  const part = parseNumber(partAmount.value);
+
+  if (!Number.isFinite(total) || !Number.isFinite(part)){
+    ratioResult.textContent = "0%";
+    ratioDesc.textContent = "기준 금액과 비교 금액을 입력해 주세요.";
+    return;
+  }
+
+  if (total === 0){
+    ratioResult.textContent = "계산 불가";
+    ratioDesc.textContent = "기준 금액은 0보다 커야 합니다.";
+    return;
+  }
+
+  const result = part / total * 100;
+  ratioResult.textContent = `${formatPercentNumber(result)}%`;
+  ratioDesc.textContent = `${formatResultNumber(part)}원은 ${formatResultNumber(total)}원의 ${formatPercentNumber(result)}%입니다.`;
+}
+
+document.getElementById("resetAmount").addEventListener("click",() => {
+  baseAmount.value = "";
+  percentAmount.value = "";
+  calculateAmountPercent();
+  baseAmount.focus();
+});
+
+document.getElementById("resetRatio").addEventListener("click",() => {
+  totalAmount.value = "";
+  partAmount.value = "";
+  calculateRatioPercent();
+  totalAmount.focus();
+});
+
+
+document.getElementById("copyAmount").addEventListener("click",async() => {
+  const text = amountResult.textContent.trim();
+
+  if (!text || text === "0원"){
+    alert("먼저 금액과 퍼센트를 입력해 주세요.");
+    return;
+  }
+
+  await copyResultText(text,document.getElementById("copyAmount"));
+});
+
+document.getElementById("copyRatio").addEventListener("click",async() => {
+  const text = ratioResult.textContent.trim();
+
+  if (!text || text === "0%" || text === "계산 불가"){
+    alert("먼저 기준 금액과 비교 금액을 입력해 주세요.");
+    return;
+  }
+
+  await copyResultText(text,document.getElementById("copyRatio"));
+});
+
+async function copyResultText(text,button){
+  const originalText = button.textContent;
+
+  try{
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+    }else{
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    button.textContent = "복사 완료";
+  }catch(error){
+    console.error(error);
+    alert("복사하지 못했습니다. 결과를 직접 선택해 복사해 주세요.");
+    return;
+  }
+
+  setTimeout(() => {
+    button.textContent = originalText;
+  },1200);
+}
+
+function parseNumber(value){
+  const normalized = String(value).replace(/,/g,"").trim();
+  if (!normalized || normalized === "-" || normalized === ".") return NaN;
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : NaN;
+}
+
+function formatEditableNumber(value){
+  let cleaned = String(value)
+    .replace(/,/g,"")
+    .replace(/[^\d.-]/g,"");
+
+  const negative = cleaned.startsWith("-");
+  cleaned = cleaned.replace(/-/g,"");
+
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot !== -1){
+    cleaned = cleaned.slice(0,firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g,"");
+  }
+
+  let [integerPart = "",decimalPart] = cleaned.split(".");
+  integerPart = integerPart.replace(/^0+(?=\d)/,"");
+
+  const grouped = integerPart
+    ? Number(integerPart).toLocaleString("ko-KR")
+    : "";
+
+  return `${negative ? "-" : ""}${grouped}${decimalPart !== undefined ? "." + decimalPart : ""}`;
+}
+
+function formatInputFinal(value){
+  return value.toLocaleString("ko-KR",{
+    maximumFractionDigits:6
+  });
+}
+
+function formatResultNumber(value){
+  return value.toLocaleString("ko-KR",{
+    maximumFractionDigits:2
+  });
+}
+
+function formatPercentNumber(value){
+  return value.toLocaleString("ko-KR",{
+    maximumFractionDigits:4
+  });
+}
+
+
+/* 한글 금액 계산기 */
+const koreanAmountInput = document.getElementById("koreanAmountInput");
+const koreanPercentInput = document.getElementById("koreanPercentInput");
+const koreanBaseNumber = document.getElementById("koreanBaseNumber");
+const koreanBaseText = document.getElementById("koreanBaseText");
+const koreanPercentLabel = document.getElementById("koreanPercentLabel");
+const koreanPercentNumber = document.getElementById("koreanPercentNumber");
+const koreanPercentText = document.getElementById("koreanPercentText");
+const koreanDocumentText = document.getElementById("koreanDocumentText");
+
+koreanAmountInput.addEventListener("input",() => {
+  koreanAmountInput.value = formatKoreanMoneyInput(koreanAmountInput.value);
+  updateKoreanAmountResults();
+});
+
+koreanPercentInput.addEventListener("input",() => {
+  koreanPercentInput.value = formatKoreanPercentInput(koreanPercentInput.value);
+  updateKoreanAmountResults();
+});
+
+koreanAmountInput.addEventListener("blur",() => {
+  const value = parseNumber(koreanAmountInput.value);
+  koreanAmountInput.value = Number.isFinite(value)
+    ? Math.max(0,Math.round(value)).toLocaleString("ko-KR")
+    : "";
+  updateKoreanAmountResults();
+});
+
+koreanPercentInput.addEventListener("blur",() => {
+  const value = parseNumber(koreanPercentInput.value);
+  koreanPercentInput.value = Number.isFinite(value)
+    ? value.toLocaleString("ko-KR",{maximumFractionDigits:6,useGrouping:false})
+    : "";
+  updateKoreanAmountResults();
+});
+
+function updateKoreanAmountResults(){
+  const amount = parseNumber(koreanAmountInput.value);
+  const percent = parseNumber(koreanPercentInput.value);
+  const percentDisplay = Number.isFinite(percent)
+    ? percent.toLocaleString("ko-KR",{maximumFractionDigits:6,useGrouping:false})
+    : "0";
+
+  koreanPercentLabel.textContent = `${percentDisplay}% 계산 금액`;
+
+  if (!Number.isFinite(amount) || amount < 0){
+    setKoreanAmountEmpty();
+    return;
+  }
+
+  const roundedAmount = Math.round(amount);
+  const calculated = Number.isFinite(percent)
+    ? Math.round(roundedAmount * percent / 100)
+    : 0;
+
+  koreanBaseNumber.textContent = `${roundedAmount.toLocaleString("ko-KR")}원`;
+  koreanBaseText.textContent = convertNumberToKoreanCurrency(roundedAmount);
+  koreanBaseText.classList.remove("placeholder");
+
+  if (Number.isFinite(percent)){
+    koreanPercentNumber.textContent = `${calculated.toLocaleString("ko-KR")}원`;
+    koreanPercentText.textContent = convertNumberToKoreanCurrency(calculated);
+    koreanPercentText.classList.remove("placeholder");
+
+    koreanDocumentText.textContent =
+      `${convertNumberToKoreanCurrency(calculated)}\n` +
+      `(₩ ${calculated.toLocaleString("ko-KR")}원 및 부가세 별도)`;
+    koreanDocumentText.classList.remove("placeholder");
+  }else{
+    koreanPercentNumber.textContent = "0원";
+    koreanPercentText.textContent = "퍼센트를 입력해 주세요.";
+    koreanPercentText.classList.add("placeholder");
+
+    koreanDocumentText.textContent = "퍼센트를 입력해 주세요.";
+    koreanDocumentText.classList.add("placeholder");
+  }
+}
+
+function setKoreanAmountEmpty(){
+  koreanBaseNumber.textContent = "0원";
+  koreanBaseText.textContent = "금액을 입력해 주세요.";
+  koreanBaseText.classList.add("placeholder");
+
+  koreanPercentNumber.textContent = "0원";
+  koreanPercentText.textContent = "금액을 입력해 주세요.";
+  koreanPercentText.classList.add("placeholder");
+
+  koreanDocumentText.textContent = "금액과 퍼센트를 입력해 주세요.";
+  koreanDocumentText.classList.add("placeholder");
+}
+
+function convertNumberToKoreanCurrency(value){
+  const number = Math.round(Number(value));
+
+  if (!Number.isFinite(number) || number < 0){
+    return "금액을 확인해 주세요.";
+  }
+
+  if (number === 0){
+    return "금 영원정";
+  }
+
+  const digits = ["","일","이","삼","사","오","육","칠","팔","구"];
+  const smallUnits = ["천","백","십",""];
+  const largeUnits = ["","만","억","조","경","해"];
+  const groups = [];
+  let remaining = number;
+
+  while (remaining > 0){
+    groups.push(remaining % 10000);
+    remaining = Math.floor(remaining / 10000);
+  }
+
+  if (groups.length > largeUnits.length){
+    return "표시 가능한 금액 범위를 초과했습니다.";
+  }
+
+  let result = "";
+
+  for (let groupIndex = groups.length - 1; groupIndex >= 0; groupIndex--){
+    const groupValue = groups[groupIndex];
+    if (groupValue === 0) continue;
+
+    const padded = String(groupValue).padStart(4,"0");
+    let groupText = "";
+
+    for (let index = 0; index < 4; index++){
+      const digit = Number(padded[index]);
+      if (digit === 0) continue;
+      groupText += digits[digit] + smallUnits[index];
+    }
+
+    result += groupText + largeUnits[groupIndex];
+  }
+
+  return `금 ${result}원정`;
+}
+
+function formatKoreanMoneyInput(value){
+  const digitsOnly = String(value).replace(/[^\d]/g,"");
+  if (!digitsOnly) return "";
+
+  const safe = digitsOnly.replace(/^0+(?=\d)/,"");
+  const number = Number(safe);
+
+  return Number.isFinite(number)
+    ? number.toLocaleString("ko-KR")
+    : safe;
+}
+
+function formatKoreanPercentInput(value){
+  let cleaned = String(value).replace(/[^\d.]/g,"");
+  const firstDot = cleaned.indexOf(".");
+
+  if (firstDot !== -1){
+    cleaned =
+      cleaned.slice(0,firstDot + 1) +
+      cleaned.slice(firstDot + 1).replace(/\./g,"");
+  }
+
+  return cleaned;
+}
+
+function hasKoreanBaseResult(){
+  return !koreanBaseText.classList.contains("placeholder");
+}
+
+function hasKoreanPercentResult(){
+  return !koreanPercentText.classList.contains("placeholder");
+}
+
+function stripKoreanCurrencyAffixes(text){
+  return String(text)
+    .replace(/^금\s*/,"")
+    .replace(/원정$/,"원")
+    .trim();
+}
+
+document.getElementById("copyKoreanBaseNumber").addEventListener("click",async event => {
+  if (!hasKoreanBaseResult()){
+    alert("먼저 금액을 입력해 주세요.");
+    return;
+  }
+  await copyResultText(koreanBaseNumber.textContent,event.currentTarget);
+});
+
+document.getElementById("copyKoreanBaseText").addEventListener("click",async event => {
+  if (!hasKoreanBaseResult()){
+    alert("먼저 금액을 입력해 주세요.");
+    return;
+  }
+  await copyResultText(stripKoreanCurrencyAffixes(koreanBaseText.textContent),event.currentTarget);
+});
+
+document.getElementById("copyKoreanPercentNumber").addEventListener("click",async event => {
+  if (!hasKoreanPercentResult()){
+    alert("먼저 금액과 퍼센트를 입력해 주세요.");
+    return;
+  }
+  await copyResultText(koreanPercentNumber.textContent,event.currentTarget);
+});
+
+document.getElementById("copyKoreanPercentText").addEventListener("click",async event => {
+  if (!hasKoreanPercentResult()){
+    alert("먼저 금액과 퍼센트를 입력해 주세요.");
+    return;
+  }
+  await copyResultText(stripKoreanCurrencyAffixes(koreanPercentText.textContent),event.currentTarget);
+});
+
+document.getElementById("copyKoreanDocument").addEventListener("click",async event => {
+  if (koreanDocumentText.classList.contains("placeholder")){
+    alert("먼저 금액과 퍼센트를 입력해 주세요.");
+    return;
+  }
+
+  await copyResultText(koreanDocumentText.textContent,event.currentTarget);
+});
+
+document.getElementById("copyKoreanAll").addEventListener("click",async event => {
+  if (!hasKoreanBaseResult()){
+    alert("먼저 금액을 입력해 주세요.");
+    return;
+  }
+
+  const text = [
+    "기준 금액",
+    koreanBaseNumber.textContent,
+    stripKoreanCurrencyAffixes(koreanBaseText.textContent),
+    "",
+    koreanPercentLabel.textContent,
+    koreanPercentNumber.textContent,
+    stripKoreanCurrencyAffixes(koreanPercentText.textContent)
+  ].join("\n");
+
+  await copyResultText(text,event.currentTarget);
+});
+
+document.getElementById("resetKoreanAmount").addEventListener("click",() => {
+  koreanAmountInput.value = "";
+  koreanPercentInput.value = "50";
+  updateKoreanAmountResults();
+  koreanAmountInput.focus();
+});
+
+updateKoreanAmountResults();
+
+</script>
+</body>
+</html>
